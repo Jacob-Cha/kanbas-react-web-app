@@ -4,11 +4,19 @@ import TOC from "./TOC";
 import Lab2 from "./Lab2";
 import Lab3 from "./Lab3";
 import React from "react";
+
 export default function Labs() {
   return (
     <div>
       <h1>Labs</h1>
       <TOC />
+      <p>Jacob Chamoun</p> 
+      <a
+        id="wd-github"
+        href="https://github.com/Jacob-Cha/kanbas-react-web-app"
+      >
+        GitHub Repository
+      </a>
       <Routes>
         <Route path="/" element={<Navigate to="Lab1" />} />
         <Route path="Lab1" element={<Lab1 />} />
