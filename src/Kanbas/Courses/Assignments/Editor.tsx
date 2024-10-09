@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Button, Row, Col } from "react-bootstrap"; // Import Bootstrap components
+import { Form, Button, Row, Col } from "react-bootstrap";
 
 export default function AssignmentEditor() {
   return (
