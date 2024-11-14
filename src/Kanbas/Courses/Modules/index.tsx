@@ -38,7 +38,7 @@ export default function Modules() {
         <button>+ Module</button>
       </div>
 
-      <ModulesControls /><br /><br /><br /><br />
+      <br /><br /><br /><br />
 
       {/* Render modules dynamically based on the course ID */}
       <ul id="wd-modules" className="list-group rounded-0">
