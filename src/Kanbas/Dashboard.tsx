@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import * as db from "./Database";
 
 interface Course {
   _id: string;
@@ -17,6 +19,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({
+  
   courses,
   course,
   setCourse,
@@ -24,6 +27,8 @@ export default function Dashboard({
   deleteCourse,
   updateCourse,
 }: DashboardProps) {
+  const { currentUser } = useSelector((state: any) => state.accountReducer);
+  const { enrollments } = db;
   return (
     <div id="wd-dashboard">
       <h1 id="wd-dashboard-title">Dashboard</h1>
@@ -67,7 +72,13 @@ export default function Dashboard({
       
       <div id="wd-dashboard-courses" className="row">
         <div className="row row-cols-1 row-cols-md-5 g-4">
-          {courses.map((course) => (
+          {courses    .filter((course) =>
+      enrollments.some(
+        (enrollment) =>
+          enrollment.user === currentUser._id &&
+          enrollment.course === course._id
+         ))
+.map((course) => (
             <div
               key={course._id}
               className="wd-dashboard-course col"
