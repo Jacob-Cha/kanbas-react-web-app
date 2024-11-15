@@ -1,13 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import * as db from "./Database";
 
-// Define the shape of the enrollment state
 interface EnrollmentState {
-  enrollments: { [courseId: string]: boolean };
+  enrollments: Record<string, boolean>; // Maps course IDs to enrollment status
   showAllCourses: boolean;
 }
 
+// Initialize with data from the database
 const initialState: EnrollmentState = {
-  enrollments: JSON.parse(localStorage.getItem("enrollments") || "{}"),
+  enrollments: db.enrollments.reduce((acc: Record<string, boolean>, enrollment: any) => {
+    acc[enrollment.course] = true;
+    return acc;
+  }, {}),
   showAllCourses: false,
 };
 
@@ -15,22 +19,17 @@ const enrollmentsSlice = createSlice({
   name: "enrollments",
   initialState,
   reducers: {
-    toggleCourseView(state) {
-      state.showAllCourses = !state.showAllCourses;
-    },
-    enroll(state, action: PayloadAction<string>) {
+    enroll: (state, action: PayloadAction<string>) => {
       state.enrollments[action.payload] = true;
-      localStorage.setItem("enrollments", JSON.stringify(state.enrollments));
     },
-    unenroll(state, action: PayloadAction<string>) {
+    unenroll: (state, action: PayloadAction<string>) => {
       delete state.enrollments[action.payload];
-      localStorage.setItem("enrollments", JSON.stringify(state.enrollments));
+    },
+    toggleCourseView: (state) => {
+      state.showAllCourses = !state.showAllCourses;
     },
   },
 });
 
-export const { toggleCourseView, enroll, unenroll } = enrollmentsSlice.actions;
+export const { enroll, unenroll, toggleCourseView } = enrollmentsSlice.actions;
 export default enrollmentsSlice.reducer;
-
-// Add this line to make the file a module
-export {};
