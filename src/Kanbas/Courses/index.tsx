@@ -8,11 +8,13 @@ import Assignments from "./Assignments";
 import AssignmentEditor from "./Assignments/Editor"; 
 import { FaAlignJustify } from "react-icons/fa6"; 
 import PeopleTable from "./People/Table"; 
+import { useSelector } from "react-redux";
 
 export default function Courses({ courses }: { courses: any[]; }) {
   const { cid } = useParams(); 
   const course = courses.find((course) => course._id === cid); 
   const { pathname } = useLocation(); 
+  const { currentUser } = useSelector((state: any) => state.accountReducer); // Get current user info
 
   return (
     <div id="wd-courses">
@@ -23,11 +25,20 @@ export default function Courses({ courses }: { courses: any[]; }) {
       <hr />
       <div className="d-flex">
         <div className="d-none d-md-block">
-          <CoursesNavigation /> {}
+          <CoursesNavigation />
         </div>
+        
         <div className="flex-fill">
+          {/* Only show course edit options if the user is FACULTY */}
+          {currentUser?.role === "FACULTY" && (
+            <div className="course-edit-controls mb-3">
+              <button className="btn btn-primary me-2">Add Course</button>
+              <button className="btn btn-warning me-2">Edit Course</button>
+              <button className="btn btn-danger">Delete Course</button>
+            </div>
+          )}
+          
           <Routes>
-            {}
             <Route path="Home" element={<Home />} />
             <Route path="Modules" element={<Modules />} />
             <Route path="Assignments" element={<Assignments />} />
