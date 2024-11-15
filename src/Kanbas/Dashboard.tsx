@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
-import * as db from "./Database";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "./store"; // Import RootState from the store
+import { enroll, unenroll, toggleCourseView } from "./enrollmentsReducer";
 
 interface Course {
   _id: string;
@@ -19,7 +20,6 @@ interface DashboardProps {
 }
 
 export default function Dashboard({
-  
   courses,
   course,
   setCourse,
@@ -27,58 +27,88 @@ export default function Dashboard({
   deleteCourse,
   updateCourse,
 }: DashboardProps) {
-  const { currentUser } = useSelector((state: any) => state.accountReducer);
-  const { enrollments } = db;
+  const dispatch = useDispatch();
+
+  // Now `currentUser` has a proper type and includes `role`
+  const currentUser = useSelector((state: RootState) => state.accountReducer.currentUser);
+  const enrollments = useSelector((state: RootState) => state.enrollments.enrollments);
+  const showAllCourses = useSelector((state: RootState) => state.enrollments.showAllCourses);
+
+  const isFaculty = currentUser?.role === "FACULTY";
+  const isStudent = currentUser?.role === "STUDENT";
+
+  const handleToggleView = () => {
+    dispatch(toggleCourseView());
+  };
+
+  const handleEnrollToggle = (courseId: string) => {
+    if (enrollments[courseId]) {
+      dispatch(unenroll(courseId));
+    } else {
+      dispatch(enroll(courseId));
+    }
+  };
+
+  const filteredCourses = showAllCourses
+    ? courses
+    : courses.filter((course) => enrollments[course._id]);
+
   return (
     <div id="wd-dashboard">
       <h1 id="wd-dashboard-title">Dashboard</h1>
       <hr />
-      <h5>
-        New Course
-        <button
-          className="btn btn-primary float-end"
-          id="wd-add-new-course-click"
-          onClick={addNewCourse}
-        >
-          Add
-        </button>
-        <button
-          className="btn btn-warning float-end me-2"
-          onClick={updateCourse}
-          id="wd-update-course-click"
-        >
-          Update
-        </button>
-      </h5>
-      <br />
-      
-      <input
-        value={course.name}
-        className="form-control mb-2"
-        onChange={(e) => setCourse({ ...course, name: e.target.value })}
-      />
 
-      <textarea
-        value={course.description}
-        className="form-control"
-        onChange={(e) => setCourse({ ...course, description: e.target.value })}
-      />
-      <hr />
+      {isFaculty && (
+        <h5>
+          New Course
+          <button
+            className="btn btn-primary float-end"
+            id="wd-add-new-course-click"
+            onClick={addNewCourse}
+          >
+            Add
+          </button>
+          <button
+            className="btn btn-warning float-end me-2"
+            onClick={updateCourse}
+            id="wd-update-course-click"
+          >
+            Update
+          </button>
+        </h5>
+      )}
+
+      {isStudent && (
+        <button className="btn btn-primary float-end mb-3" onClick={handleToggleView}>
+          {showAllCourses ? "Show Enrolled Courses" : "Show All Courses"}
+        </button>
+      )}
+
+      {isFaculty && (
+        <>
+          <input
+            value={course.name}
+            className="form-control mb-2"
+            onChange={(e) => setCourse({ ...course, name: e.target.value })}
+          />
+
+          <textarea
+            value={course.description}
+            className="form-control"
+            onChange={(e) => setCourse({ ...course, description: e.target.value })}
+          />
+          <hr />
+        </>
+      )}
 
       <h2 id="wd-dashboard-published">
-        Published Courses ({courses.length})
+        Published Courses ({filteredCourses.length})
       </h2>
       <hr />
-      
+
       <div id="wd-dashboard-courses" className="row">
         <div className="row row-cols-1 row-cols-md-5 g-4">
-          {courses    .filter((course) =>
-      enrollments.some(
-        (enrollment) =>
-          enrollment.user === currentUser._id &&
-          enrollment.course === course._id
-         ))
-.map((course) => (
+          {filteredCourses.map((course) => (
             <div
               key={course._id}
               className="wd-dashboard-course col"
@@ -100,19 +130,34 @@ export default function Dashboard({
                     >
                       {course.description}
                     </p>
-                    <button className="btn btn-primary">Go</button>
-                    <button
-                      onClick={(event) => {
-                        event.preventDefault();
-                        deleteCourse(course._id);
-                      }}
-                      className="btn btn-danger float-end"
-                      id="wd-delete-course-click"
-                    >
-                      Delete
-                    </button>
                   </div>
                 </Link>
+                <div className="card-body">
+                  {isFaculty && (
+                    <>
+                      <button
+                        onClick={(event) => {
+                          event.preventDefault();
+                          deleteCourse(course._id);
+                        }}
+                        className="btn btn-danger float-end"
+                        id="wd-delete-course-click"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                  {isStudent && (
+                    <button
+                      className={`btn ${
+                        enrollments[course._id] ? "btn-danger" : "btn-success"
+                      }`}
+                      onClick={() => handleEnrollToggle(course._id)}
+                    >
+                      {enrollments[course._id] ? "Unenroll" : "Enroll"}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
