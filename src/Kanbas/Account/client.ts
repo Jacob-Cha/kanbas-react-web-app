@@ -35,13 +35,24 @@ export const signout = async () => {
   return response.data;
 };
 
-export const findMyCourses = async () => {
-  const { data } = await axiosWithCredentials.get(
-    `${USERS_API}/current/courses`
-  );
-  return data;
+export const findMyCourses = async (userId?: string) => {
+  console.log("Calling findMyCourses for userId:", userId);
+  try {
+    if (!userId) {
+      console.log("No user ID provided");
+      return [];
+    }
+    
+    const { data } = await axiosWithCredentials.get(
+      `${USERS_API}/${userId}/courses`
+    );
+    console.log("Received course data:", data);
+    return data;
+  } catch (error) {
+    console.error("Error in findMyCourses:", error);
+    throw error;
+  }
 };
-
 export const createCourse = async (course: any) => {
   const { data } = await axiosWithCredentials.post(
     `${USERS_API}/current/courses`,

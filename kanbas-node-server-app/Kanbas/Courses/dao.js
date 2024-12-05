@@ -10,9 +10,14 @@ export function findAllCourses() {
   return Database.courses;
 }
 export function findCoursesForEnrolledUser(userId) {
+  console.log("Finding courses for user:", userId);
+  console.log("Available enrollments:", Database.enrollments);
+  console.log("Available courses:", Database.courses);
     const { courses, enrollments } = Database;
     const enrolledCourses = courses.filter((course) =>
       enrollments.some((enrollment) => enrollment.user === userId && enrollment.course === course._id));
+      console.log("Found enrolled courses:", enrolledCourses);
+
     return enrolledCourses;
   }
   export function createCourse(course) {

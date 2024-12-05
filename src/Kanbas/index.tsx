@@ -37,15 +37,19 @@ export default function Kanbas() {
   // Function to fetch courses from the backend
   const fetchCourses = async () => {
     try {
-      const fetchedCourses = await userClient.findMyCourses();
-      setCourses(
-        fetchedCourses.map((course: any) => ({
-          ...course,
-          description: course.description || "No description available",
-        }))
-      );
+      console.log("Fetching courses for user:", currentUser);
+      if (currentUser?._id) {
+        const fetchedCourses = await userClient.findMyCourses(currentUser._id);
+        console.log("Fetched courses:", fetchedCourses);
+        setCourses(
+          fetchedCourses.map((course: any) => ({
+            ...course,
+            description: course.description || "No description available",
+          }))
+        );
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Full error details:", error);
     }
   };
 

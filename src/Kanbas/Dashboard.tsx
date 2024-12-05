@@ -1,22 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "./store";
-
-
-
-import { Course } from "./CourseTypes"; // import the unified interface
+import { Course } from "./CourseTypes";
 
 interface DashboardProps {
-  courses: Course[]; // Add this line
+  courses: Course[];  // Add this line back
   course: Course;
   setCourse: React.Dispatch<React.SetStateAction<Course>>;
-  addNewCourse: () => Promise<void>; // Adjust return types if necessary
-  deleteCourse: (courseId: string) => Promise<void>; // Adjust return types if necessary
-  updateCourse: () => Promise<void>; // Adjust return types if necessary
+  addNewCourse: () => Promise<void>;
+  deleteCourse: (courseId: string) => Promise<void>;
+  updateCourse: () => Promise<void>;
 }
 
 export default function Dashboard({
+  courses,  // Add this back
   course,
   setCourse,
   addNewCourse,
@@ -24,27 +22,11 @@ export default function Dashboard({
   updateCourse,
 }: DashboardProps) {
   const currentUser = useSelector((state: RootState) => state.accountReducer.currentUser);
-  const [courses, setCourses] = useState<Course[]>([]);
   const isFaculty = currentUser?.role === "FACULTY";
-  const isStudent = currentUser?.role === "STUDENT";
-
-  useEffect(() => {
-    const fetchCourses = async () => {
-      if (currentUser) {
-        const userId = currentUser._id || "current";
-        const response = await fetch(`/api/users/${userId}/courses`);
-        if (response.ok) {
-          const coursesData = await response.json();
-          setCourses(coursesData);
-        } else {
-          console.error("Failed to fetch courses");
-        }
-      }
-    };
-
-    fetchCourses();
-  }, [currentUser]);
-
+  console.log("Courses in Dashboard:", courses);
+  console.log("Current User:", currentUser);
+  console.log("Is Faculty:", isFaculty);
+  
   return (
     <div id="wd-dashboard">
       <h1 id="wd-dashboard-title">Dashboard</h1>
