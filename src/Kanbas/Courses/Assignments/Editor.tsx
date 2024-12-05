@@ -1,155 +1,324 @@
-import React, { useState, useEffect } from "react";
-import { Form, Button, Row, Col } from "react-bootstrap";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import React, { useEffect } from 'react';
+import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { addAssignment, updateAssignment } from "./reducer";
+import * as client from "./client";
 
-export default function AssignmentEditor() {
-  const { cid, aid } = useParams();
+interface AssignmentParams {
+  cid: string;
+  assignmentId?: string;
+}
+
+interface Assignment {
+  _id: string;
+  title: string;
+  description: string;
+  points: number;
+  dueDate: string;
+  availableFromDate: string;
+  availableUntilDate: string;
+  course: string;
+}
+
+const AssignmentEditor = () => {
+  const { cid, assignmentId } = useParams<keyof AssignmentParams>();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Select the current assignment based on the aid (if it exists)
-  const assignment = useSelector((state: any) =>
-    state.assignments.assignments.find(
-      (assignment: any) => assignment._id === aid && assignment.course === cid
+  const currentAssignment = useSelector((state: any) => 
+    state.assignmentsReducer.assignments.find(
+      (a: any) => a._id === assignmentId
     )
   );
 
-  // State variables for form fields
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [points, setPoints] = useState(100);
-  const [dueDate, setDueDate] = useState("");
-  const [availableFrom, setAvailableFrom] = useState("");
-  const [availableUntil, setAvailableUntil] = useState("");
-
-  // Load existing assignment data into form fields if editing
-  useEffect(() => {
-    if (assignment) {
-      setTitle(assignment.title);
-      setDescription(assignment.description || "");
-      setPoints(assignment.points || 100);
-      setDueDate(assignment.dueDate || "");
-      setAvailableFrom(assignment.availableFrom || "");
-      setAvailableUntil(assignment.availableUntil || "");
-    }
-  }, [assignment]);
-
-  const handleSave = () => {
-    const updatedAssignment = {
-      _id: aid || new Date().getTime().toString(), // Use existing ID if editing, otherwise generate a new one
-      title,
-      description,
-      points,
-      dueDate,
-      availableFrom,
-      availableUntil,
-      course: cid || "", // Ensure the course ID is set
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = {
+      title: (document.getElementById("wd-name") as HTMLInputElement).value,
+      description: (document.getElementById("wd-description") as HTMLTextAreaElement).value,
+      points: parseInt((document.getElementById("wd-points") as HTMLInputElement).value),
+      dueDate: (document.getElementById("wd-due-date") as HTMLInputElement).value,
+      availableFromDate: (document.getElementById("wd-available-from") as HTMLInputElement).value,
+      availableUntilDate: (document.getElementById("wd-available-until") as HTMLInputElement).value,
+      _id: assignmentId || new Date().getTime().toString(),
+      course: cid
     };
-
-    if (aid) {
-      // If aid exists, we're editing
-      dispatch(updateAssignment(updatedAssignment));
-    } else {
-      // If aid does not exist, we're creating a new assignment
-      dispatch(addAssignment(updatedAssignment));
+  
+    try {
+      if (assignmentId) {
+        const updatedAssignment = await client.updateAssignment(assignmentId, formData);
+        dispatch(updateAssignment(updatedAssignment));
+      } else {
+        const newAssignment = await client.createAssignment(cid!, formData);
+        dispatch(addAssignment(newAssignment));
+      }
+      navigate(`/Kanbas/Courses/${cid}/Assignments`);
+    } catch (error) {
+      console.error("Error submitting form:", error);
     }
-
-    // Navigate back to the Assignments screen
-    navigate(`/Kanbas/Courses/${cid}/Assignments`);
   };
 
-  const handleCancel = () => {
-    // Navigate back to the Assignments screen without saving
-    navigate(`/Kanbas/Courses/${cid}/Assignments`);
-  };
+  useEffect(() => {
+    if (currentAssignment) {
+      (document.getElementById("wd-name") as HTMLInputElement).value = currentAssignment.title;
+      (document.getElementById("wd-description") as HTMLTextAreaElement).value = currentAssignment.description;
+      // ... set other fields ...
+    }
+  }, [currentAssignment]);
 
   return (
-    <div id="wd-assignments-editor" className="container mt-4">
-      <Form>
-        <Form.Group className="mb-3">
-          <Form.Label>Assignment Name</Form.Label>
-          <Form.Control
-            id="wd-name"
+    <div className="container mt-4">
+      <form id="wd-assignments-editor" onSubmit={handleSubmit}>
+        {/* Assignment Name */}
+        <div className="mb-3">
+          <label htmlFor="wd-name" className="form-label">
+            Assignment Name
+          </label>
+          <input
             type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            className="form-control"
+            id="wd-name"
+            defaultValue="A1"
           />
-        </Form.Group>
+        </div>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Description</Form.Label>
-          <Form.Control
-            as="textarea"
+        {/* Description */}
+        <div className="mb-3">
+          <textarea
+            className="form-control fixed-textarea"
             id="wd-description"
-            rows={5}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            defaultValue={`The assignment is available online
+
+Submit a link to the landing page of your Web application running on Netlify.
+
+The landing page should include the following:
+- Your full name and section
+- Links to each of the lab assignments
+- Link to the Kanbas application
+- Links to all relevant source code repositories
+
+The Kanbas application should include a link to navigate back to the landing page.`}
           />
-        </Form.Group>
+        </div>
 
-        <Row className="mb-3">
-          <Col md={6}>
-            <Form.Group>
-              <Form.Label>Points</Form.Label>
-              <Form.Control
-                id="wd-points"
-                type="number"
-                value={points}
-                onChange={(e) => setPoints(Number(e.target.value))}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+        {/* Points */}
+        <div className="row mb-3">
+          <div className="col-md-2">
+            <label htmlFor="wd-points" className="form-label">
+              Points
+            </label>
+          </div>
+          <div className="col-md-10">
+            <input
+              type="number"
+              className="form-control"
+              id="wd-points"
+              defaultValue={100}
+            />
+          </div>
+        </div>
 
-        <Row className="mb-3">
-          <Col md={4}>
-            <Form.Group>
-              <Form.Label>Due</Form.Label>
-              <Form.Control
-                id="wd-due-date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={4}>
-            <Form.Group>
-              <Form.Label>Available from</Form.Label>
-              <Form.Control
-                id="wd-available-from"
-                type="date"
-                value={availableFrom}
-                onChange={(e) => setAvailableFrom(e.target.value)}
-              />
-            </Form.Group>
-          </Col>
-          <Col md={4}>
-            <Form.Group>
-              <Form.Label>Until</Form.Label>
-              <Form.Control
-                id="wd-available-until"
-                type="date"
-                value={availableUntil}
-                onChange={(e) => setAvailableUntil(e.target.value)}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+        {/* Assignment Group */}
+        <div className="row mb-3">
+          <div className="col-md-2">
+            <label htmlFor="wd-assignment-group" className="form-label">
+              Assignment Group
+            </label>
+          </div>
+          <div className="col-md-10">
+            <select className="form-select" id="wd-assignment-group">
+              <option value="ASSIGNMENTS">ASSIGNMENTS</option>
+            </select>
+          </div>
+        </div>
 
-        <Row className="mt-3">
-          <Col>
-            <Button variant="secondary" onClick={handleCancel} className="me-2">
-              Cancel
-            </Button>
-            <Button variant="success" onClick={handleSave}>
-              Save
-            </Button>
-          </Col>
-        </Row>
-      </Form>
+        {/* Display Grade As */}
+        <div className="row mb-3">
+          <div className="col-md-2">
+            <label htmlFor="wd-display-grade-as" className="form-label">
+              Display Grade as
+            </label>
+          </div>
+          <div className="col-md-10">
+            <select className="form-select" id="wd-display-grade-as">
+              <option value="Percentage">Percentage</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Submission Type */}
+        <div className="row mb-3">
+          <div className="col-md-2">
+            <label htmlFor="wd-submission-type" className="form-label">
+              Submission Type
+            </label>
+          </div>
+          <div className="col-md-10">
+            <select className="form-select mb-2" id="wd-submission-type">
+              <option value="Online">Online</option>
+            </select>
+            <div className="card">
+              <div className="card-body">
+                <h6 className="card-subtitle mb-2 text-muted">
+                  Online Entry Options
+                </h6>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="wd-text-entry"
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor="wd-text-entry"
+                  >
+                    Text Entry
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="wd-website-url"
+                    defaultChecked
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor="wd-website-url"
+                  >
+                    Website URL
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="wd-media-recordings"
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor="wd-media-recordings"
+                  >
+                    Media Recordings
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="wd-student-annotation"
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor="wd-student-annotation"
+                  >
+                    Student Annotation
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="wd-file-uploads"
+                  />
+                  <label
+                    className="form-check-label"
+                    htmlFor="wd-file-uploads"
+                  >
+                    File Uploads
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Assign Section */}
+        <div className="row mb-3">
+          <div className="col-md-2">
+            <label className="form-label">Assign</label>
+          </div>
+          <div className="col-md-10">
+            <div className="card">
+              <div className="card-body">
+                {/* Assign To */}
+                <div className="mb-3">
+                  <label htmlFor="wd-assign-to" className="form-label">
+                    Assign to
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="wd-assign-to"
+                    defaultValue="Everyone"
+                  />
+                </div>
+                {/* Due Date */}
+                <div className="mb-3">
+                  <label htmlFor="wd-due-date" className="form-label">
+                    Due
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="form-control"
+                    id="wd-due-date"
+                    defaultValue="2024-05-13T23:59"
+                  />
+                </div>
+                {/* Available From and Until */}
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label
+                      htmlFor="wd-available-from"
+                      className="form-label"
+                    >
+                      Available from
+                    </label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      id="wd-available-from"
+                      defaultValue="2024-05-06T00:00"
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label
+                      htmlFor="wd-available-until"
+                      className="form-label"
+                    >
+                      Until
+                    </label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      id="wd-available-until"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <hr className="my-4" style={{ borderTop: '2px solid #adb5bd' }} />
+
+        {/* Action Buttons */}
+        <div className="text-end mt-3">
+          <button
+            type="button"
+            className="btn btn-secondary me-2"
+            onClick={() => navigate(`/Kanbas/Courses/${cid}/Assignments`)}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="btn btn-danger">
+            Save
+          </button>
+        </div>
+      </form>
     </div>
   );
-}
+};
+
+export default AssignmentEditor;

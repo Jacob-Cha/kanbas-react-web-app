@@ -1,5 +1,4 @@
 // server/index.js
-
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
@@ -8,11 +7,11 @@ import "dotenv/config";
 import UserRoutes from "./Kanbas/Users/routes.js";
 import CourseRoutes from "./Kanbas/Courses/routes.js";
 import ModuleRoutes from "./Kanbas/Modules/routes.js";
+import AssignmentRoutes from "./Kanbas/Assignments/routes.js";  // Add this import
 import Lab5 from './Lab5/index.js';
 import Hello from './hello.js';
-import CoursesRoutes from './Kanbas/Courses/routes.js';
 
-const app = express(); // Initialize app before using it
+const app = express();
 
 // CORS Configuration
 app.use(
@@ -43,9 +42,9 @@ app.use(express.json());
 
 // Initialize Routes
 UserRoutes(app);
-CourseRoutes(app);
+CourseRoutes(app);  // Remove the duplicate CoursesRoutes(app)
 ModuleRoutes(app);
-CoursesRoutes(app); // Now this is called after app is defined
+AssignmentRoutes(app);  // Add this line
 Lab5(app);
 Hello(app);
 

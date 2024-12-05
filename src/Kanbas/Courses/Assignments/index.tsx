@@ -1,132 +1,113 @@
-import React, { useState } from "react";
-import { Button, InputGroup, FormControl, ListGroup, ProgressBar, Modal } from "react-bootstrap";
-import { FaPlus, FaTrashAlt } from "react-icons/fa";
-import { AiOutlineSearch } from "react-icons/ai";
-import { BsCheckCircle } from "react-icons/bs";
-import { FiMoreVertical, FiGrid } from "react-icons/fi";
-import { useParams, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { deleteAssignment } from "./reducer";
 
-interface Assignment {
-  _id: string;
-  title: string;
-  description?: string;
-  points?: number;
-  dueDate?: string;
-  availableFrom?: string;
-  availableUntil?: string;
-  course: string;
-}
+
+import { BsGripVertical } from "react-icons/bs";
+import SearchControls from "./SearchControls";
+import AssignmentControls from "./AssignmentsControls";
+import { RiArrowDownSFill } from "react-icons/ri";
+import { MdOutlineAssignment } from "react-icons/md";
+import LessonControlButtons from "../Modules/LessonControlButtons";
+import { useParams } from "react-router";
+import { useSelector } from "react-redux";
+import { deleteAssignment as deleteAssignmentAction, setAssignments } from "./reducer";
+import { useDispatch } from "react-redux";
+import { FaTrash } from "react-icons/fa";
+import DeleteDialog from "./DeleteDialog";
+import { useEffect } from "react";
+import * as assignmentsClient from "./client";
 
 export default function Assignments() {
   const { cid } = useParams();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { assignments } = useSelector((state: any) => state.assignments);
   const { currentUser } = useSelector((state: any) => state.accountReducer);
+  const { assignments } = useSelector((state: any) => state.assignmentsReducer);
+  const dispatch = useDispatch();
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [assignmentToDelete, setAssignmentToDelete] = useState<Assignment | null>(null);
+  useEffect(() => {
+    const loadAssignments = async () => {
+      if (cid) {
+        const fetchedAssignments = await assignmentsClient.fetchAssignmentsForCourse(cid);
+        dispatch(setAssignments(fetchedAssignments));
+      }
+    };
+    loadAssignments();
+  }, [cid, dispatch]);
 
-  const filteredAssignments = assignments.filter(
-    (assignment: Assignment) => assignment.course === cid
-  );
-
-  const handleDeleteClick = (assignment: Assignment) => {
-    setAssignmentToDelete(assignment);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = () => {
-    if (assignmentToDelete) {
-      dispatch(deleteAssignment(assignmentToDelete._id)); // Dispatch delete action
+  const handleDelete = async (assignmentId: string) => {
+    const success = await assignmentsClient.deleteAssignment(assignmentId);
+    if (success) {
+      dispatch(deleteAssignmentAction(assignmentId));
+    } else {
+      alert("Failed to delete the assignment.");
     }
-    setShowDeleteModal(false);
-    setAssignmentToDelete(null);
   };
 
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setAssignmentToDelete(null);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    };
+    return date.toLocaleString("en-US", options);
   };
 
   return (
-    <div id="wd-assignments" className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <InputGroup style={{ width: '300px' }}>
-          <InputGroup.Text>
-            <AiOutlineSearch />
-          </InputGroup.Text>
-          <FormControl
-            id="wd-search-assignment"
-            placeholder="Search for Assignments"
-          />
-        </InputGroup>
-
-        {currentUser?.role === "FACULTY" && (
-          <Button variant="danger" onClick={() => navigate("AssignmentEditor")}>
-            <FaPlus className="me-2" /> Assignment
-          </Button>
-        )}
-      </div>
-
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="fw-bold">ASSIGNMENTS</h5>
-        <div className="d-flex align-items-center">
-          <ProgressBar now={40} label="40% of Total" style={{ width: '150px' }} />
-          {currentUser?.role === "FACULTY" && (
-            <Button variant="link" className="p-0 ms-2">
-              <FaPlus />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <ListGroup as="ul" id="wd-assignment-list">
-        {filteredAssignments.map((assignment: Assignment) => (
-          <ListGroup.Item key={assignment._id} as="li" className="d-flex align-items-center justify-content-between">
-            <div className="d-flex align-items-center">
-              <FiGrid className="me-2 fs-4" />
-              <div>
-                <a className="wd-assignment-link" href={`#/Kanbas/Courses/${cid}/Assignments/${assignment._id}`}>
-                  {assignment.title}
-                </a>
-                <div className="text-muted">Course: {assignment.course}</div>
-              </div>
+    <div className="me-3">
+      <SearchControls />
+      <br />
+      <ul id="wd-assignments" className="list-group rounded-0">
+        <li className="wd-assignment list-group-item p-0 mb-5 fs-5">
+          <div className="d-flex align-items-center justify-content-between wd-assignments-title p-3 ps-2 bg-secondary">
+            <div>
+              <BsGripVertical className="me-2 fs-3" />
+              <RiArrowDownSFill className="me-2" />
+              <b>ASSIGNMENTS</b>{" "}
             </div>
-            <div className="d-flex align-items-center">
-              <BsCheckCircle className="me-3 fs-5 text-success" />
-              {currentUser?.role === "FACULTY" && (
-                <>
-                  <FiMoreVertical className="fs-5 me-3" onClick={() => navigate(`AssignmentEditor/${assignment._id}`)} />
-                  <FaTrashAlt
-                    className="fs-5 text-danger"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => handleDeleteClick(assignment)}
-                  />
-                </>
-              )}
-            </div>
-          </ListGroup.Item>
-        ))}
-      </ListGroup>
-
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={cancelDelete}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this assignment?</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={cancelDelete}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            Delete
-          </Button>
-        </Modal.Footer>
-      </Modal>
+            {currentUser.role === "FACULTY" && <AssignmentControls />}
+          </div>
+          <ul className="wd-assignment-list list-group rounded-0">
+            {assignments
+              .filter((assignment: any) => assignment.course === cid)
+              .map((assignment: any) => (
+                <li key={assignment._id} className="wd-assignment-list-item list-group-item p-3 ps-2">
+                  <div className="d-flex align-items-center">
+                    <BsGripVertical className="me-2 fs-3" />
+                    <MdOutlineAssignment className="me-3 text-success" />
+                    <span>
+                      <a
+                        className="wd-assignment-link text-dark text-decoration-none fw-bold"
+                        href={`#/Kanbas/Courses/${cid}/Assignments/${assignment._id}`}
+                      >
+                        {assignment.title}
+                      </a>
+                      <br />
+                      <span className="text-danger">Multiple Modules</span> |
+                      <b> Not available until</b>{" "}
+                      {formatDate(assignment.availableFrom)} | <b>Due</b>{" "}
+                      {formatDate(assignment.dueDate)} | {assignment.points} pts
+                    </span>
+                    {currentUser.role === "FACULTY" && (
+                      <span className="d-flex ms-auto">
+                        <FaTrash
+                          data-bs-toggle="modal"
+                          data-bs-target="#wd-delete-assignment-dialog"
+                          className="text-danger me-2 mb-1"
+                          onClick={() => handleDelete(assignment._id)}
+                        />
+                        <DeleteDialog
+                          handleDelete={() => handleDelete(assignment._id)}
+                        />
+                        <LessonControlButtons />
+                      </span>
+                    )}
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </li>
+      </ul>
     </div>
   );
 }
