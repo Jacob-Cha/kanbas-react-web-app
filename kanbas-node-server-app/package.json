@@ -20,7 +20,7 @@
   "homepage": "https://github.com/Jacob-Cha/kanbas-node-server-app#readme",
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.1",
     "express-session": "^1.18.1",
     "nodemon": "^3.1.7"
