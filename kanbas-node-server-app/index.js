@@ -1,18 +1,20 @@
-import Hello from './hello.js'
-import express from 'express'
+// server/index.js
+
+import express from 'express';
+import cors from 'cors';
+import session from 'express-session';
+import "dotenv/config";
+
 import UserRoutes from "./Kanbas/Users/routes.js";
 import CourseRoutes from "./Kanbas/Courses/routes.js";
+import ModuleRoutes from "./Kanbas/Modules/routes.js";
+import Lab5 from './Lab5/index.js';
+import Hello from './hello.js';
+import CoursesRoutes from './Kanbas/Courses/routes.js';
 
-import Lab5 from './Lab5/index.js'
-import cors from "cors";
-import session from "express-session";
-import "dotenv/config";
-import session from "express-session";
-import "dotenv/config";
+const app = express(); // Initialize app before using it
 
-const app = express();
-UserRoutes(app);
-
+// CORS Configuration
 app.use(
     cors({
         credentials: true,
@@ -20,27 +22,33 @@ app.use(
     })
 );
 
+// Session Configuration
 const sessionOptions = {
     secret: process.env.SESSION_SECRET || "kanbas",
     resave: false,
     saveUninitialized: false,
-  };
-  if (process.env.NODE_ENV !== "development") {
+};
+if (process.env.NODE_ENV !== "development") {
     sessionOptions.proxy = true;
     sessionOptions.cookie = {
-      sameSite: "none",
-      secure: true,
-      domain: process.env.NODE_SERVER_DOMAIN,
+        sameSite: "none",
+        secure: true,
+        domain: process.env.NODE_SERVER_DOMAIN,
     };
-  }
-  app.use(session(sessionOptions));
-  
+}
+app.use(session(sessionOptions));
+
+// Middleware
 app.use(express.json());
-  
-Hello(app);
+
+// Initialize Routes
+UserRoutes(app);
 CourseRoutes(app);
-
+ModuleRoutes(app);
+CoursesRoutes(app); // Now this is called after app is defined
 Lab5(app);
+Hello(app);
 
-
-app.listen(process.env.PORT || 4000, () => console.log("hello, server started"));
+// Start Server
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

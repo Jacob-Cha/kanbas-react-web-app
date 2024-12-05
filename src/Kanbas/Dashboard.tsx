@@ -1,58 +1,49 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "./store";
-import { enroll, unenroll, toggleCourseView } from "./enrollmentsReducer";
 
-interface Course {
-  _id: string;
-  name: string;
-  description: string;
-}
+
+
+import { Course } from "./CourseTypes"; // import the unified interface
 
 interface DashboardProps {
-  courses: Course[];
+  courses: Course[]; // Add this line
   course: Course;
-  setCourse: (course: Course) => void;
-  addNewCourse: () => void;
-  deleteCourse: (courseId: string) => void;
-  updateCourse: () => void;
+  setCourse: React.Dispatch<React.SetStateAction<Course>>;
+  addNewCourse: () => Promise<void>; // Adjust return types if necessary
+  deleteCourse: (courseId: string) => Promise<void>; // Adjust return types if necessary
+  updateCourse: () => Promise<void>; // Adjust return types if necessary
 }
 
 export default function Dashboard({
-  courses,
   course,
   setCourse,
   addNewCourse,
   deleteCourse,
   updateCourse,
 }: DashboardProps) {
-  const dispatch = useDispatch();
-
   const currentUser = useSelector((state: RootState) => state.accountReducer.currentUser);
-  const enrollments = useSelector((state: RootState) => state.enrollments.enrollments);
-  const showAllCourses = useSelector((state: RootState) => state.enrollments.showAllCourses);
-
+  const [courses, setCourses] = useState<Course[]>([]);
   const isFaculty = currentUser?.role === "FACULTY";
   const isStudent = currentUser?.role === "STUDENT";
 
-  const handleToggleView = () => {
-    dispatch(toggleCourseView());
-  };
+  useEffect(() => {
+    const fetchCourses = async () => {
+      if (currentUser) {
+        const userId = currentUser._id || "current";
+        const response = await fetch(`/api/users/${userId}/courses`);
+        if (response.ok) {
+          const coursesData = await response.json();
+          setCourses(coursesData);
+        } else {
+          console.error("Failed to fetch courses");
+        }
+      }
+    };
 
-  const handleEnrollToggle = (courseId: string) => {
-    if (enrollments[courseId]) {
-      dispatch(unenroll(courseId));
-    } else {
-      dispatch(enroll(courseId));
-    }
-  };
-
-  const filteredCourses = isFaculty
-    ? courses // Faculty sees all courses
-    : showAllCourses
-    ? courses // Students see all courses when toggled
-    : courses.filter((course) => enrollments[course._id]); // Students see only enrolled courses by default
+    fetchCourses();
+  }, [currentUser]);
 
   return (
     <div id="wd-dashboard">
@@ -79,12 +70,6 @@ export default function Dashboard({
         </h5>
       )}
 
-      {isStudent && (
-        <button className="btn btn-primary float-end mb-3" onClick={handleToggleView}>
-          {showAllCourses ? "Show Enrolled Courses" : "Show All Courses"}
-        </button>
-      )}
-
       {isFaculty && (
         <>
           <input
@@ -102,13 +87,13 @@ export default function Dashboard({
       )}
 
       <h2 id="wd-dashboard-published">
-        Published Courses ({filteredCourses.length})
+        Published Courses ({courses.length})
       </h2>
       <hr />
 
       <div id="wd-dashboard-courses" className="row">
         <div className="row row-cols-1 row-cols-md-5 g-4">
-          {filteredCourses.map((course) => (
+          {courses.map((course) => (
             <div
               key={course._id}
               className="wd-dashboard-course col"
@@ -132,8 +117,8 @@ export default function Dashboard({
                     </p>
                   </div>
                 </Link>
-                <div className="card-body">
-                  {isFaculty && (
+                {isFaculty && (
+                  <div className="card-body">
                     <button
                       onClick={(event) => {
                         event.preventDefault();
@@ -144,18 +129,8 @@ export default function Dashboard({
                     >
                       Delete
                     </button>
-                  )}
-                  {isStudent && (
-                    <button
-                      className={`btn ${
-                        enrollments[course._id] ? "btn-danger" : "btn-success"
-                      }`}
-                      onClick={() => handleEnrollToggle(course._id)}
-                    >
-                      {enrollments[course._id] ? "Unenroll" : "Enroll"}
-                    </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
