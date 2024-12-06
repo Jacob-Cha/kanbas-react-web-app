@@ -1,10 +1,13 @@
 import CoursesNavigation from "./Navigation"; 
 import Modules from "./Modules"; 
 import Home from "./Home"; 
-import { Routes, Route, useParams, useLocation } from "react-router";
+import { Routes, Route, useParams, useLocation, Navigate } from "react-router";  // Added Navigate
 import React, { useEffect, useState } from "react";
 import Assignments from "./Assignments"; 
 import AssignmentEditor from "./Assignments/Editor"; 
+import QuizList from "./Quizzes/QuizList";
+import QuizEditor from "./Quizzes/QuizEditor";
+import QuizTaker from "./Quizzes/QuizTaker";
 import { FaAlignJustify } from "react-icons/fa6"; 
 import PeopleTable from "./People/Table"; 
 import { useSelector } from "react-redux";
@@ -17,7 +20,6 @@ export default function Courses({ courses }: { courses: any[]; }) {
   const { currentUser } = useSelector((state: any) => state.accountReducer);
 
   useEffect(() => {
-    // Find the course in the passed courses prop first
     const foundCourse = courses.find((course) => course._id === cid);
     if (foundCourse) {
       setCurrentCourse(foundCourse);
@@ -46,12 +48,33 @@ export default function Courses({ courses }: { courses: any[]; }) {
           )}
           
           <Routes>
-          <Route path="Home" element={<Home currentCourse={currentCourse} />} />
-  <Route path="Modules" element={<Modules currentCourse={currentCourse} />} />  {/* Add currentCourse here */}
-  <Route path="Assignments" element={<Assignments />} />
-  <Route path="Assignments/AssignmentEditor" element={<AssignmentEditor />} />
-  <Route path="Assignments/:aid" element={<AssignmentEditor />} />
-  <Route path="People" element={<PeopleTable />} />
+            <Route path="Home" element={<Home currentCourse={currentCourse} />} />
+            <Route path="Modules" element={<Modules currentCourse={currentCourse} />} />
+            <Route path="Assignments" element={<Assignments />} />
+            <Route path="Assignments/AssignmentEditor" element={<AssignmentEditor />} />
+            <Route path="Assignments/:aid" element={<AssignmentEditor />} />
+            <Route path="Quizzes" element={<QuizList currentCourse={currentCourse} />} />
+            <Route 
+              path="Quizzes/new" 
+              element={
+                currentUser?.role === "FACULTY" ? 
+                  <QuizEditor currentCourse={currentCourse} /> : 
+                  <Navigate to="../" />
+              } 
+            />
+            <Route 
+              path="Quizzes/:quizId/edit" 
+              element={
+                currentUser?.role === "FACULTY" ? 
+                  <QuizEditor currentCourse={currentCourse} /> : 
+                  <Navigate to="../" />
+              } 
+            />
+            <Route 
+              path="Quizzes/:quizId/take" 
+              element={<QuizTaker currentCourse={currentCourse} />} 
+            />
+            <Route path="People" element={<PeopleTable />} />
           </Routes>
         </div>
       </div>
