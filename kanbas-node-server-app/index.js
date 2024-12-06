@@ -13,7 +13,6 @@ import Hello from './hello.js';
 import mongoose from "mongoose";
 const CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kanbas"
 mongoose.connect(CONNECTION_STRING);
-import "dotenv/config";
 
 const app = express();
 

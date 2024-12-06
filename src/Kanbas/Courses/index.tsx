@@ -1,26 +1,34 @@
-import { courses } from "../Database"; 
 import CoursesNavigation from "./Navigation"; 
 import Modules from "./Modules"; 
 import Home from "./Home"; 
 import { Routes, Route, useParams, useLocation } from "react-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Assignments from "./Assignments"; 
 import AssignmentEditor from "./Assignments/Editor"; 
 import { FaAlignJustify } from "react-icons/fa6"; 
 import PeopleTable from "./People/Table"; 
 import { useSelector } from "react-redux";
+import * as courseClient from "./client";
 
 export default function Courses({ courses }: { courses: any[]; }) {
   const { cid } = useParams(); 
-  const course = courses.find((course) => course._id === cid); 
+  const [currentCourse, setCurrentCourse] = useState<any>(null);
   const { pathname } = useLocation(); 
-  const { currentUser } = useSelector((state: any) => state.accountReducer); // Get current user info
+  const { currentUser } = useSelector((state: any) => state.accountReducer);
+
+  useEffect(() => {
+    // Find the course in the passed courses prop first
+    const foundCourse = courses.find((course) => course._id === cid);
+    if (foundCourse) {
+      setCurrentCourse(foundCourse);
+    }
+  }, [cid, courses]);
 
   return (
     <div id="wd-courses">
       <h2 className="text-danger">
         <FaAlignJustify className="me-4 fs-4 mb-1" />
-        {course && course.name} &gt; {pathname.split("/")[4]}
+        {currentCourse && currentCourse.name} &gt; {pathname.split("/")[4]}
       </h2>
       <hr />
       <div className="d-flex">
@@ -29,7 +37,6 @@ export default function Courses({ courses }: { courses: any[]; }) {
         </div>
         
         <div className="flex-fill">
-          {/* Only show course edit options if the user is FACULTY */}
           {currentUser?.role === "FACULTY" && (
             <div className="course-edit-controls mb-3">
               <button className="btn btn-primary me-2">Add Course</button>
@@ -39,12 +46,12 @@ export default function Courses({ courses }: { courses: any[]; }) {
           )}
           
           <Routes>
-            <Route path="Home" element={<Home />} />
-            <Route path="Modules" element={<Modules />} />
-            <Route path="Assignments" element={<Assignments />} />
-            <Route path="Assignments/AssignmentEditor" element={<AssignmentEditor />} /> {/* New route for creating assignments */}
-            <Route path="Assignments/:aid" element={<AssignmentEditor />} /> {/* Existing route for editing assignments */}
-            <Route path="People" element={<PeopleTable />} />
+          <Route path="Home" element={<Home currentCourse={currentCourse} />} />
+  <Route path="Modules" element={<Modules currentCourse={currentCourse} />} />  {/* Add currentCourse here */}
+  <Route path="Assignments" element={<Assignments />} />
+  <Route path="Assignments/AssignmentEditor" element={<AssignmentEditor />} />
+  <Route path="Assignments/:aid" element={<AssignmentEditor />} />
+  <Route path="People" element={<PeopleTable />} />
           </Routes>
         </div>
       </div>
