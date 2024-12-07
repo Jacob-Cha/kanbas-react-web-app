@@ -1,6 +1,5 @@
 import React from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import QuizList from "./Quizzes/QuizList";  // Add this import
 
 export default function CoursesNavigation() {
   const { cid } = useParams<{ cid: string }>();

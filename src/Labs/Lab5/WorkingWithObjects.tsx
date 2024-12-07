@@ -15,8 +15,8 @@ export default function WorkingWithObjects() {
     description: "NodeJS server with ExpressJS",
     course: "NodeJS",
   });
-  const ASSIGNMENT_API_URL = `${REMOTE_SERVER}/lab5/assignment`;
-  const MODULE_API_URL = `${REMOTE_SERVER}/lab5/module`;
+  const ASSIGNMENT_API_URL = `http://localhost:4000/lab5/assignment`;
+  const MODULE_API_URL = `http://localhost:4000/lab5/module`;
   return (
     <div id="wd-working-with-objects">
       <h3>Working With Objects</h3>
@@ -24,7 +24,7 @@ export default function WorkingWithObjects() {
       <a
         id="wd-retrieve-assignments"
         className="btn btn-primary"
-        href={`${REMOTE_SERVER}/lab5/assignment`}
+        href={`http://localhost:4000/lab5/assignment`}
       >
         Get Assignment
       </a>
@@ -33,7 +33,7 @@ export default function WorkingWithObjects() {
       <a
         id="wd-retrieve-assignment-title"
         className="btn btn-primary"
-        href={`${REMOTE_SERVER}/lab5/assignment/title`}
+        href={`http://localhost:4000/lab5/assignment/title`}
       >
         Get Title
       </a>

@@ -1,3 +1,5 @@
+// src/Kanbas/index.tsx
+
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom"; // Ensure you're using react-router-dom
 import Account from "./Account";
@@ -14,27 +16,9 @@ import * as courseClient from "./Courses/client";
 import { Course } from "./CourseTypes"; // Ensure correct path
 
 export default function Kanbas() {
-
-  const updateEnrollment = async (courseId: string, enrolled: boolean) => {
-    if (enrolled) {
-      await userClient.enrollIntoCourse(currentUser._id, courseId);
-    } else {
-      await userClient.unenrollFromCourse(currentUser._id, courseId);
-    }
-    setCourses(
-      courses.map((course) => {
-        if (course._id === courseId) {
-          return { ...course, enrolled: enrolled };
-        } else {
-          return course;
-        }
-      })
-    );
-  };
- 
   // State for all courses
   const [courses, setCourses] = useState<Course[]>([]);
-
+  
   // State for the current course being managed
   const [course, setCourse] = useState<Course>({
     _id: "1234",
@@ -46,55 +30,38 @@ export default function Kanbas() {
     credits: 0,
     description: "New Description",
   });
-  const [enrolling, setEnrolling] = useState<boolean>(false);
-  const findCoursesForUser = async () => {
-    try {
-      const courses = await userClient.findCoursesForUser(currentUser._id);
-      setCourses(courses);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  const fetchCourses = async () => {
-    try {
-      const allCourses = await courseClient.fetchAllCourses();
-      const enrolledCourses = await userClient.findCoursesForUser(
-        currentUser._id
-      );
-      const courses = allCourses.map((course: any) => {
-        if (enrolledCourses.find((c: any) => c._id === course._id)) {
-          return { ...course, enrolled: true };
-        } else {
-          return course;
-        }
-      });
-      setCourses(courses);
-    } catch (error) {
-      console.error(error);
-    }
-  };
- 
+
   // Accessing the current user from Redux store
   const { currentUser } = useSelector((state: any) => state.accountReducer);
 
-  // Function to fetch all courses from the backend
-
-
-  // useEffect to fetch courses on component load or when currentUser changes
-  useEffect(() => {
-    if (enrolling) {
-      fetchCourses();
-    } else {
-      findCoursesForUser();
+  // Function to fetch courses from the backend
+  const fetchCourses = async () => {
+    try {
+      console.log("Fetching courses for user:", currentUser);
+      if (currentUser?._id) {
+        const fetchedCourses = await userClient.findMyCourses(currentUser._id);
+        console.log("Fetched courses:", fetchedCourses);
+        setCourses(
+          fetchedCourses.map((course: any) => ({
+            ...course,
+            description: course.description || "No description available",
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Full error details:", error);
     }
- 
-  }, [currentUser, enrolling]);
-  
- 
+  };
+
+  // useEffect to fetch courses when currentUser changes
+  useEffect(() => {
+    fetchCourses();
+  }, [currentUser]);
+
   // Function to add a new course
   const addNewCourse = async () => {
     try {
-      const newCourse = await courseClient.createCourse(course);
+      const newCourse = await userClient.createCourse(course);
       setCourses([...courses, newCourse]);
     } catch (error) {
       console.error("Error adding new course:", error);
@@ -103,16 +70,21 @@ export default function Kanbas() {
 
   // Function to delete a course
   const deleteCourse = async (courseId: string) => {
-    const status = await courseClient.deleteCourse(courseId);
-    setCourses(courses.filter((course) => course._id !== courseId));
+    try {
+      await courseClient.deleteCourse(courseId);
+      setCourses(courses.filter((course) => course._id !== courseId));
+    } catch (error) {
+      console.error("Error deleting course:", error);
+    }
   };
- 
 
   // Function to update a course
   const updateCourse = async () => {
     try {
       await courseClient.updateCourse(course);
-      setCourses(courses.map((c) => (c._id === course._id ? course : c)));
+      setCourses(
+        courses.map((c) => (c._id === course._id ? course : c))
+      );
     } catch (error) {
       console.error("Error updating course:", error);
     }
@@ -137,8 +109,6 @@ export default function Kanbas() {
                     addNewCourse={addNewCourse}
                     deleteCourse={deleteCourse}
                     updateCourse={updateCourse}
-                    enrolling={enrolling} setEnrolling={setEnrolling}
-                    updateEnrollment={updateEnrollment}
                   />
                 </ProtectedRoute>
               }

@@ -4,10 +4,8 @@ import { BiImport } from "react-icons/bi";
 import { LiaFileImportSolid } from "react-icons/lia";
 import { AiOutlineExport } from "react-icons/ai"; 
 import React from "react";
-interface CourseStatusProps {
-  currentCourse: any;  // Use your Course type here
-}
-export default function CourseStatus({ currentCourse }: CourseStatusProps)  {
+
+export default function CourseStatus() {
   return (
     <div id="wd-course-status" style={{ width: "300px" }}>
       <h2>Course Status</h2>

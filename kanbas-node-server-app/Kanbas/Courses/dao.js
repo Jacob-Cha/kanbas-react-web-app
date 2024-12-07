@@ -1,49 +1,34 @@
-import model from "./model.js";
-import mongoose from "mongoose";
+import Database from "../Database/index.js";
+export function deleteCourse(courseId) {
+    const { courses, enrollments } = Database;
+    Database.courses = courses.filter((course) => course._id !== courseId);
+    Database.enrollments = enrollments.filter(
+      (enrollment) => enrollment.course !== courseId
+  );}
+  
+export function findAllCourses() {
+  return Database.courses;
+}
+export function findCoursesForEnrolledUser(userId) {
+  console.log("Finding courses for user:", userId);
+  console.log("Available enrollments:", Database.enrollments);
+  console.log("Available courses:", Database.courses);
+    const { courses, enrollments } = Database;
+    const enrolledCourses = courses.filter((course) =>
+      enrollments.some((enrollment) => enrollment.user === userId && enrollment.course === course._id));
+      console.log("Found enrolled courses:", enrolledCourses);
 
-export async function deleteCourse(courseId) {
-  return model.deleteOne({ _id: courseId });
-}
- 
-export async function findAllCourses() {
-  return model.find();
-}
-export async function findModulesForCourse(courseNumber) {
-  try {
-    console.log("Fetching modules for course number:", courseNumber);
-    const modules = await model.find({ course: courseNumber }); // Match by course number
-    return modules;
-  } catch (error) {
-    console.error("Error in findModulesForCourse:", error.message);
-    throw error;
+    return enrolledCourses;
   }
-}
-
-
-
-
-
-export async function findCoursesForEnrolledUser(userId) {
-  try {
-    // You'll need to use MongoDB aggregation or populate to get enrolled courses
-    // For now, returning all courses as a temporary solution
-    return await model.find();
-    
-    // TODO: Implement proper enrollment logic with MongoDB
-    // Something like:
-    // return await model.find({
-    //   _id: { $in: await enrollmentModel.find({ userId }).distinct('courseId') }
-    // });
-  } catch (error) {
-    console.error("Error finding courses for user:", error);
-    return [];
+  export function createCourse(course) {
+    const newCourse = { ...course, _id: Date.now().toString() };
+    Database.courses = [...Database.courses, newCourse];
+    return newCourse;
   }
-}
-
-export async function createCourse(course) {
-  return model.create(course);
-}
-
-export async function updateCourse(courseId, courseUpdates) {
-  return model.findByIdAndUpdate(courseId, courseUpdates, { new: true });
-}
+  export function updateCourse(courseId, courseUpdates) {
+    const { courses } = Database;
+    const course = courses.find((course) => course._id === courseId);
+    Object.assign(course, courseUpdates);
+    return course;
+  }
+  

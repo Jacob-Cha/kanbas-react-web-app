@@ -1,30 +1,35 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setCurrentUser } from "./reducer";
-import * as client from "./client";  // Import client instead of db
+import { setCurrentUser, User } from "./reducer"; // Import User type
+import * as db from "../Database"; // Mock database
 
 export default function Signin() {
   const [credentials, setCredentials] = useState<{ username?: string; password?: string }>({});
-  const [error, setError] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const signin = async () => {
-    try {
-      const user = await client.signin(credentials);
-      dispatch(setCurrentUser(user));
-      navigate("/Kanbas/Dashboard");
-    } catch (error: any) {
-      setError(error?.response?.data?.message || "Invalid credentials");
-      console.error("Signin error:", error);
+  const signin = () => {
+    const user = db.users.find(
+      (u: any) => u.username === credentials.username && u.password === credentials.password
+    );
+
+    if (!user) {
+      console.error("Invalid username or password");
+      return;
+    }
+
+    if (["FACULTY", "STUDENT", "ADMIN"].includes(user.role)) {
+      dispatch(setCurrentUser(user as User)); 
+      navigate("/Kanbas/Dashboard"); 
+    } else {
+      console.error("Invalid role detected for user:", user.role);
     }
   };
 
   return (
     <div id="wd-signin-screen" className="signin-container">
       <h1>Sign in</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
       <input
         value={credentials.username || ""}
         onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}

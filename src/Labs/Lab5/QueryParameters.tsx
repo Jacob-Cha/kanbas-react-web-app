@@ -24,28 +24,28 @@ export default function QueryParameters() {
         <a
           id="wd-query-parameter-add"
           className="btn btn-primary me-2"
-          href={`${REMOTE_SERVER}/lab5/calculator?operation=add&a=${a}&b=${b}`}
+          href={`http://localhost:4000/lab5/calculator?operation=add&a=${a}&b=${b}`}
         >
           Add {a} + {b}
         </a>
         <a
           id="wd-query-parameter-subtract"
           className="btn btn-danger me-2"
-          href={`${REMOTE_SERVER}/lab5/calculator?operation=subtract&a=${a}&b=${b}`}
+          href={`http://localhost:4000/lab5/calculator?operation=subtract&a=${a}&b=${b}`}
         >
           Substract {a} - {b}
         </a>
         <a
           id="wd-query-parameter-multiply"
           className="btn btn-primary me-2"
-          href={`${REMOTE_SERVER}/lab5/calculator?operation=multiply&a=${a}&b=${b}`}
+          href={`http://localhost:4000/lab5/calculator?operation=multiply&a=${a}&b=${b}`}
         >
           Multiply {a} * {b}
         </a>
         <a
           id="wd-query-parameter-divide"
           className="btn btn-danger"
-          href={`${REMOTE_SERVER}/lab5/calculator?operation=divide&a=${a}&b=${b}`}
+          href={`http://localhost:4000/lab5/calculator?operation=divide&a=${a}&b=${b}`}
         >
           Divide {a} / {b}
         </a>

@@ -9,10 +9,8 @@ import { setModules, addModule, editModule, updateModule, deleteModule } from ".
 import { useSelector, useDispatch } from "react-redux";
 import * as coursesClient from "../client";
 import * as modulesClient from "./client";
-interface ModulesProps {
-  currentCourse: any;  // Use your Course type here
-}
-export default function Modules({ currentCourse }: ModulesProps) {
+
+export default function Modules() {
   const removeModule = async (moduleId: string) => {
     await modulesClient.deleteModule(moduleId);
     dispatch(deleteModule(moduleId));

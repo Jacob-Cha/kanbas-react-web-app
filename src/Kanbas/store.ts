@@ -4,15 +4,13 @@ import modulesReducer from "./Courses/Modules/reducer";
 import accountReducer from "./Account/reducer";
 import enrollmentsReducer from "./enrollmentsReducer";
 import assignmentsReducer from "./Courses/Assignments/reducer";
-import quizzesReducer from "./Courses/Quizzes/reducer";  // Add this import
 
 const store = configureStore({
   reducer: {
-    assignmentsReducer,
+    assignmentsReducer,  // Change this from 'assignments' to 'assignmentsReducer'
     modulesReducer,
     accountReducer,
     enrollments: enrollmentsReducer,
-    quizzesReducer,  // Add this line
   },
 });
 
