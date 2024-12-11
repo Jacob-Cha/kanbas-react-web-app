@@ -24,20 +24,24 @@ export default function Profile() {
 
     const updateProfile = async () => {
         try {
-            console.log("Updating profile with:", profile); // Log the full profile object
-            const updatedProfile = await client.updateUser(profile); // Ensure the full profile is sent
-            console.log("Profile updated successfully:", updatedProfile);
+            const updatedProfile = await client.updateUser(profile);
             dispatch(setCurrentUser(updatedProfile));
+            
+            // Force reload profile data
+            const refreshedProfile = await client.getProfile();
+            dispatch(setCurrentUser(refreshedProfile));
+            setProfile(refreshedProfile);
+            
             alert("Profile updated successfully!");
+            
+            // If role changed, redirect to signin to refresh permissions
+            if (updatedProfile.role !== profile.role) {
+                await client.signout();
+                navigate("/Kanbas/Account/Signin");
+            }
         } catch (error: any) {
             console.error("Error updating profile:", error);
-            if (error.response) {
-                alert(`Error: ${error.response.data.message || "Server error"}`);
-            } else if (error.request) {
-                alert("Error: No response from server. Please try again later.");
-            } else {
-                alert(`Error: ${error.message}`);
-            }
+            alert("Error updating profile. Please try again.");
         }
     };
     

@@ -69,7 +69,10 @@ export default function Assignments() {
           </div>
           <ul className="wd-assignment-list list-group rounded-0">
             {assignments
-              .filter((assignment: any) => assignment.course === cid)
+              .filter(
+                (assignment: any) =>
+                  assignment.course.toString() === cid
+              )
               .map((assignment: any) => (
                 <li key={assignment._id} className="wd-assignment-list-item list-group-item p-3 ps-2">
                   <div className="d-flex align-items-center">
@@ -85,8 +88,9 @@ export default function Assignments() {
                       <br />
                       <span className="text-danger">Multiple Modules</span> |
                       <b> Not available until</b>{" "}
-                      {formatDate(assignment.availableFrom)} | <b>Due</b>{" "}
-                      {formatDate(assignment.dueDate)} | {assignment.points} pts
+                      {assignment.availableFromDate ? formatDate(assignment.availableFromDate) : "N/A"}{" "}
+                      | <b>Due</b>{" "}
+                      {assignment.dueDate ? formatDate(assignment.dueDate) : "N/A"} | {assignment.points || 100} pts
                     </span>
                     {currentUser.role === "FACULTY" && (
                       <span className="d-flex ms-auto">

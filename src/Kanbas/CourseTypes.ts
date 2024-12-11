@@ -9,5 +9,6 @@ export interface Course {
     credits: number;
     description: string;
     author?: string;
+    enrolled?: boolean;
   }
   

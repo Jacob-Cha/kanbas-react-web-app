@@ -25,13 +25,17 @@ export const fetchAssignmentById = async (assignmentId: string) => {
 // Create a new assignment for a specific course
 export const createAssignment = async (courseId: string, assignment: any) => {
   try {
+    console.log("Sending POST request to:", `/api/courses/${courseId}/assignments`);
+    console.log("Payload:", assignment);
     const response = await API.post(`/api/courses/${courseId}/assignments`, assignment);
+    console.log("Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error creating assignment:", error);
     throw error;
   }
 };
+
 
 
 // Update an existing assignment

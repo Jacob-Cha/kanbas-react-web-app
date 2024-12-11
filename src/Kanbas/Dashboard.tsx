@@ -5,12 +5,15 @@ import { RootState } from "./store";
 import { Course } from "./CourseTypes";
 
 interface DashboardProps {
-  courses: Course[];  // Add this line back
+  courses: Course[];
   course: Course;
   setCourse: React.Dispatch<React.SetStateAction<Course>>;
   addNewCourse: () => Promise<void>;
   deleteCourse: (courseId: string) => Promise<void>;
   updateCourse: () => Promise<void>;
+  enrolling: boolean;
+  setEnrolling: React.Dispatch<React.SetStateAction<boolean>>;
+  updateEnrollment: (courseId: string, enrolled: boolean) => void  // Add this line
 }
 
 export default function Dashboard({
@@ -20,6 +23,9 @@ export default function Dashboard({
   addNewCourse,
   deleteCourse,
   updateCourse,
+  enrolling,
+  setEnrolling,
+  updateEnrollment
 }: DashboardProps) {
   const currentUser = useSelector((state: RootState) => state.accountReducer.currentUser);
   const isFaculty = currentUser?.role === "FACULTY";
@@ -29,7 +35,9 @@ export default function Dashboard({
   
   return (
     <div id="wd-dashboard">
-      <h1 id="wd-dashboard-title">Dashboard</h1>
+      <h1 id="wd-dashboard-title">Dashboard         <button onClick={() => setEnrolling(!enrolling)} className="float-end btn btn-primary" >
+          {enrolling ? "My Courses" : "All Courses"}
+        </button></h1>
       <hr />
 
       {isFaculty && (
@@ -89,7 +97,14 @@ export default function Dashboard({
                   <img src="/images/reactjs.jpg" width="100%" height={160} alt="Course" />
                   <div className="card-body">
                     <h5 className="wd-dashboard-course-title card-title">
-                      {course.name}
+                    {enrolling && (
+              <button onClick={(event) => {
+                event.preventDefault();
+                updateEnrollment(course._id, !course.enrolled);
+              }} className={`btn ${ course.enrolled ? "btn-danger" : "btn-success" } float-end`} >
+                {course.enrolled ? "Unenroll" : "Enroll"}
+              </button>
+            )}{course.name}
                     </h5>
                     <p
                       className="wd-dashboard-course-title card-text overflow-y-hidden"
